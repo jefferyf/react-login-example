@@ -1,26 +1,64 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from 'react';
+import LoggedOut from './components/LoggedOut.jsx';
+import { LoggedIn } from './components/LoggedIn';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      isLoggedIn: false,
+      errorMessage: '',
+      token: ''
+    }
+  }
+
+  loginAsync = async (username, password) => {
+    const settings = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: username, password })
+    };
+
+    try {
+      let response = await fetch('https://reqres.in/api/login', settings);
+      let data = await response.json();
+      if (response.ok) {
+        this.setState({         
+          isLoggedIn: true,
+          token: data.token
+        });
+      } else {
+        this.setState({ errorMessage: data.error });
+      }
+    } catch (e) {
+      this.setState({ errorMessage: JSON.stringify(e) });
+    }
+  }
+
+  logout = () => {
+    this.setState({
+      isLoggedIn: false,
+      token: '',
+      errorMessage: 'Logged out'
+    });
+  }  
+
+  render() {
+    const { errorMessage, isLoggedIn, token } = this.state;
+
+    return (
+      <div className="App">
+        {!isLoggedIn
+          ? <LoggedOut errorMessage={errorMessage} loginHandler={this.loginAsync} />
+          : <LoggedIn token={token} logoutHandler={this.logout} />
+        }        
+      </div>
+    );
+  }
+  
 }
 
 export default App;
